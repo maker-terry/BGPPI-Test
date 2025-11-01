@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桌游人格测试 (BGPPI)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f8961e;
+        }
+
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .question {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .option-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .option-label {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .option-radio {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--accent);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .result-container {
+            display: none;
+            text-align: center;
+        }
+
+        .result-type {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin: 20px 0;
+            font-weight: 700;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        .result-description {
+            text-align: left;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .dimensions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .dimension {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .dimension-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--secondary);
+        }
+
+        .dimension-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .game-recommendations {
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .recommendation {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .dimensions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>桌游人格测试</h1>
+            <p class="subtitle">Board Game Player Personality Inventory (BGPPI)</p>
+            <p>发现你的桌游风格，找到最适合你的游戏！</p>
+        </header>
+
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <div id="test-container">
+            <!-- 题目将通过JavaScript动态生成 -->
+        </div>
+
+        <div class="navigation">
+            <button class="btn btn-outline" id="prev-btn" style="display: none;">上一题</button>
+            <button class="btn" id="next-btn" style="display: none;">下一题</button>
+            <button class="btn" id="submit-btn" style="display: none;">查看结果</button>
+        </div>
+
+        <div class="result-container" id="result-container">
+            <h2>你的桌游人格类型是：</h2>
+            <div class="result-type" id="result-type"></div>
+            <div class="result-title" id="result-title"></div>
+
+            <div class="dimensions" id="dimensions">
+                <!-- 维度结果将通过JavaScript动态生成 -->
+            </div>
+
+            <div class="chart-container">
+                <canvas id="dimension-chart"></canvas>
+            </div>
+
+            <div class="result-description" id="result-description"></div>
+
+            <div class="game-recommendations">
+                <h3>适合你的桌游推荐：</h3>
+                <div id="game-recommendations">
+                    <!-- 游戏推荐将通过JavaScript动态生成 -->
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" id="restart-btn">重新测试</button>
+        </div>
+    </div>
+
+    <script>
+        // 测试题目数据
+        const questions = [
+            {
+                question: "游戏开始时，你最先做的是：",
+                options: [
+                    "总是观察其他玩家，看看谁看起来最有威胁或最可能合作",
+                    "经常观察其他玩家",
+                    "两者都会做一些",
+                    "经常研究自己的版图或手牌",
+                    "总是研究自己的版图或手牌，构思自己的开局计划"
+                ],
+                dimension: "energy",
+                scores: { 0: "S", 1: "S", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "在一个合作游戏中，队友提出了一个你认为不是最优的计划，你会：",
+                options: [
+                    "完全接受并尽力让计划变得有趣",
+                    "基本接受，但会提出一些小建议",
+                    "会表达自己的看法，但也愿意尝试队友的计划",
+                    "会详细分析为什么你的计划更有效",
+                    "坚持自己的计划，认为这是最佳选择"
+                ],
+                dimension: "victory",
+                scores: { 0: "E", 1: "E", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "发现一个可以让你获胜但非常无趣的'公式化'策略，你会：",
+                options: [
+                    "完全不会使用，乐趣最重要",
+                    "不太可能使用，除非没有其他选择",
+                    "可能会尝试一下，但也会探索其他有趣玩法",
+                    "很可能会使用，因为获胜很重要",
+                    "一定会使用，获胜就是目标"
+                ],
+                dimension: "victory",
+                scores: { 0: "E", 1: "E", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "游戏过程中，你最喜欢的部分是：",
+                options: [
+                    "完全是与他人互动的时刻",
+                    "主要是与他人互动的时刻",
+                    "互动和思考同样重要",
+                    "主要是独自思考并执行操作的时刻",
+                    "完全是独自思考并执行完美操作的时刻"
+                ],
+                dimension: "energy",
+                scores: { 0: "S", 1: "S", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "对于一个模棱两可的规则，你的看法是：",
+                options: [
+                    "完全支持大家投票决定临时规则",
+                    "倾向于大家投票决定临时规则",
+                    "两种方式都可以接受",
+                    "倾向于查阅规则书确保正确",
+                    "必须立刻查阅规则书或官方FAQ"
+                ],
+                dimension: "rules",
+                scores: { 0: "F", 1: "F", 2: "N", 3: "P", 4: "P" }
+            },
+            {
+                question: "你更享受哪种胜利？",
+                options: [
+                    "完全是通过短期操作始终保持领先",
+                    "主要是通过短期操作保持领先",
+                    "两种方式都能带来满足感",
+                    "主要是通过长期布局实现逆转",
+                    "完全是通过精妙的长期布局实现逆转"
+                ],
+                dimension: "strategy",
+                scores: { 0: "T", 1: "T", 2: "N", 3: "G", 4: "G" }
+            },
+            {
+                question: "一款你从未玩过的复杂游戏，你更倾向于：",
+                options: [
+                    "完全边玩边学",
+                    "主要边玩边学",
+                    "两种方式都可以",
+                    "主要先看规则书或教学视频",
+                    "必须看完所有规则书和教学视频"
+                ],
+                dimension: "rules",
+                scores: { 0: "F", 1: "F", 2: "N", 3: "P", 4: "P" }
+            },
+            {
+                question: "游戏结束时，如果输了但完成了一个非常酷的组合技，你的感觉是：",
+                options: [
+                    "完全满足，那个操作太爽了",
+                    "比较满足，操作比输赢更重要",
+                    "有点复杂，既有遗憾也有满足",
+                    "有点遗憾，如果能获胜就更好了",
+                    "非常遗憾，胜利才是最重要的"
+                ],
+                dimension: "victory",
+                scores: { 0: "E", 1: "E", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "你选择游戏的主要标准是：",
+                options: [
+                    "完全是因为它能创造热闹有趣的氛围",
+                    "主要是因为它能创造热闹有趣的氛围",
+                    "机制和氛围同样重要",
+                    "主要是因为它有深度和挑战性",
+                    "完全是因为它有深度和挑战性"
+                ],
+                dimension: "energy",
+                scores: { 0: "S", 1: "S", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "当你被一个玩家'攻击'或'针对'时，你的反应是：",
+                options: [
+                    "完全不在意，游戏而已",
+                    "不太在意，继续享受游戏",
+                    "有点复杂，但会继续游戏",
+                    "会计划如何回应",
+                    "一定会计划如何'回报'对方"
+                ],
+                dimension: "victory",
+                scores: { 0: "E", 1: "E", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "你如何看待桌游中的'随机性'（骰子、抽卡）？",
+                options: [
+                    "完全增加了游戏的戏剧性和趣味",
+                    "主要增加了游戏的戏剧性和趣味",
+                    "既有好处也有坏处",
+                    "有时会破坏精心设计的策略",
+                    "经常破坏精心设计的策略，更喜欢可控性强的游戏"
+                ],
+                dimension: "strategy",
+                scores: { 0: "T", 1: "T", 2: "N", 3: "G", 4: "G" }
+            },
+            {
+                question: "在游戏中，你更擅长：",
+                options: [
+                    "完全是根据变化快速调整计划",
+                    "主要是根据变化快速调整计划",
+                    "两种能力都有一些",
+                    "主要是构建强大的稳定引擎",
+                    "完全是构建强大的稳定引擎"
+                ],
+                dimension: "strategy",
+                scores: { 0: "T", 1: "T", 2: "N", 3: "G", 4: "G" }
+            },
+            {
+                question: "你会为了一个有趣的、能制造笑料的玩法而放弃获胜的机会吗？",
+                options: [
+                    "总是会，大家的笑声就是最好的回报",
+                    "经常会，乐趣比胜利更重要",
+                    "有时会，取决于具体情况",
+                    "很少会，游戏的目的是争取胜利",
+                    "几乎不会，胜利才是最重要的"
+                ],
+                dimension: "victory",
+                scores: { 0: "E", 1: "E", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "教学一款新游戏时，你会：",
+                options: [
+                    "完全先讲大概念，细节游戏中再讲",
+                    "主要先讲大概念，细节游戏中再讲",
+                    "平衡讲解概念和规则",
+                    "主要详细解释所有规则",
+                    "完全详细解释所有规则，确保公平"
+                ],
+                dimension: "rules",
+                scores: { 0: "F", 1: "F", 2: "N", 3: "P", 4: "P" }
+            },
+            {
+                question: "你认为游戏中的'嘴炮'（说服、欺骗）：",
+                options: [
+                    "完全是游戏最精华的部分",
+                    "主要是游戏的重要部分",
+                    "既有好处也有坏处",
+                    "有时令人不安",
+                    "经常令人不安，更喜欢依靠硬实力"
+                ],
+                dimension: "energy",
+                scores: { 0: "S", 1: "S", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "你最喜欢的游戏组件是：",
+                options: [
+                    "完全是精美的版图和模型",
+                    "主要是精美的版图和模型",
+                    "两种组件都喜欢",
+                    "主要是分数或资源的指示物",
+                    "完全是分数或资源的指示物"
+                ],
+                dimension: "strategy",
+                scores: { 0: "G", 1: "G", 2: "N", 3: "T", 4: "T" }
+            },
+            {
+                question: "游戏结束后，你还会长时间回味和讨论的是：",
+                options: [
+                    "完全是精彩的操作或搞笑瞬间",
+                    "主要是精彩的操作或搞笑瞬间",
+                    "两者都会回味",
+                    "主要是策略分析和最优解",
+                    "完全是策略分析和最优解"
+                ],
+                dimension: "victory",
+                scores: { 0: "E", 1: "E", 2: "N", 3: "C", 4: "C" }
+            },
+            {
+                question: "你如何看待'落后玩家帮扶'（Kingmaking）？",
+                options: [
+                    "完全是游戏政治的一部分",
+                    "主要是游戏政治的一部分",
+                    "既有合理性也有问题",
+                    "主要破坏了游戏的竞技性",
+                    "完全破坏了游戏的竞技性"
+                ],
+                dimension: "rules",
+                scores: { 0: "F", 1: "F", 2: "N", 3: "P", 4: "P" }
+            },
+            {
+                question: "你构建一个引擎时，更看重：",
+                options: [
+                    "完全是爆发潜力和combo可能性",
+                    "主要是爆发潜力和combo可能性",
+                    "两者都看重",
+                    "主要是稳定性和固定产出",
+                    "完全是稳定性和固定产出"
+                ],
+                dimension: "strategy",
+                scores: { 0: "T", 1: "T", 2: "N", 3: "G", 4: "G" }
+            },
+            {
+                question: "对你来说，一场理想的游戏局最重要的是：",
+                options: [
+                    "完全是所有人都玩得开心，气氛热烈",
+                    "主要是所有人都玩得开心，气氛热烈",
+                    "乐趣和竞技同样重要",
+                    "主要是进行激烈而公平的智力对抗",
+                    "完全是进行激烈而公平的智力对抗"
+                ],
+                dimension: "energy",
+                scores: { 0: "S", 1: "S", 2: "N", 3: "C", 4: "C" }
+            }
+        ];
+
+        // 人格类型描述
+        const typeDescriptions = {
+            "STPC": {
+                title: "社交战术纯粹竞争型",
+                description: "你是'竞技社交家'。你享受与人互动的乐趣，同时专注于游戏的竞技性。你喜欢利用灵活的战术在游戏中取得优势，并严格遵守规则以保证公平竞争。你在游戏中既能建立社交联系，又能展现你的竞争实力。"
+            },
+            "STPE": {
+                title: "社交战术纯粹体验型",
+                description: "你是'欢乐策略家'。你喜欢与人互动并享受游戏过程，注重灵活应对变化的战术。你虽然遵守规则，但更看重游戏带来的乐趣和体验，而不是单纯的胜负。"
+            },
+            "STFC": {
+                title: "社交战术自由竞争型",
+                description: "你是'诡变者'。你专注于桌面信息，灵活地制定短期战术。你不介意模糊规则，只要它能帮你找到获胜的巧妙方法。你机敏且以胜利为导向，同时享受社交互动。"
+            },
+            "STFE": {
+                title: "社交战术自由体验型",
+                description: "你是'派对灵魂'。你享受游戏的社交氛围和灵活多变的战术玩法。你不太拘泥于规则，更注重创造有趣的游戏体验和欢乐时刻。"
+            },
+            "SGPC": {
+                title: "社交战略纯粹竞争型",
+                description: "你是'战略外交官'。你喜欢有深度的大型游戏，并严格遵守规则。你享受构建宏大策略的过程，同时善于利用社交技巧在游戏中建立优势，并以获胜为最终目标。"
+            },
+            "SGPE": {
+                title: "社交战略纯粹体验型",
+                description: "你是'外交官'。你喜欢有深度的大型游戏，并严格遵守规则。你享受构建宏大策略的过程，但更看重与朋友共度的时光和游戏带来的故事，输赢其次。"
+            },
+            "SGFC": {
+                title: "社交战略自由竞争型",
+                description: "你是'自由战略家'。你擅长制定长期战略，并利用社交技巧在游戏中取得优势。你对规则持灵活态度，更注重通过创新方式达成获胜目标。"
+            },
+            "SGFE": {
+                title: "社交战略自由体验型",
+                description: "你是'故事大王'。你喜欢有主题、有叙事性的游戏。你会为了创造一个精彩的故事或一个搞笑的效果而'村规'甚至放弃获胜。你是派对的灵魂，享受战略规划与社交互动的结合。"
+            },
+            "CTPC": {
+                title: "沉思战术纯粹竞争型",
+                description: "你是'竞技大师'。你将桌游视为纯粹的智力运动。你精通规则，善于计算概率和最优解，专注于在公平的环境下通过精准的操作击败对手。你喜欢灵活应对变化的战术而非长期战略。"
+            },
+            "CTPE": {
+                title: "沉思战术纯粹体验型",
+                description: "你是'精密体验者'。你享受独自思考和分析游戏的过程，喜欢灵活应对局势变化。你遵守规则，但更注重游戏过程中的精妙操作和体验，而非单纯追求胜利。"
+            },
+            "CTFC": {
+                title: "沉思战术自由竞争型",
+                description: "你是'计算型玩家'。你专注于桌面信息，善于通过灵活战术取得优势。你对规则持实用主义态度，只要能帮你获胜，不介意适当变通。你以胜利为导向，享受独立思考的过程。"
+            },
+            "CTFE": {
+                title: "沉思战术自由体验型",
+                description: "你是'自由思想家'。你享受独立思考和分析游戏的过程，喜欢灵活应对变化。你不拘泥于规则，更注重游戏带来的创意体验和个人满足感。"
+            },
+            "CGPC": {
+                title: "沉思战略纯粹竞争型",
+                description: "你是'深度战略家'。你喜欢复杂有深度的游戏，并严格遵守规则。你擅长制定长期战略，享受从游戏开始就规划获胜路径的过程，并以智力对抗和获胜为最大乐趣。"
+            },
+            "CGPE": {
+                title: "沉思战略纯粹体验型",
+                description: "你是'分析型玩家'。你享受独自思考和分析复杂游戏的过程，注重长期战略规划。你遵守规则，但更看重游戏机制的深度和策略执行的满足感，而非单纯胜负。"
+            },
+            "CGFC": {
+                title: "沉思战略自由竞争型",
+                description: "你是'创新战略家'。你擅长制定长期战略，并对规则持灵活态度，只要能帮助你实现战略目标。你以获胜为导向，享受通过创新思维方式在游戏中取得优势。"
+            },
+            "CGFE": {
+                title: "沉思战略自由体验型",
+                description: "你是'创意规划师'。你享受独自思考和分析游戏的过程，注重长期战略规划。你对规则持开放态度，更注重游戏过程中的创意表达和个人体验，而非严格遵守规则或追求胜利。"
+            }
+        };
+
+        // 维度描述
+        const dimensionDescriptions = {
+            "energy": {
+                "S": "社交型 (Social)",
+                "C": "沉思型 (Contemplative)",
+                "fullName": "能量取向"
+            },
+            "strategy": {
+                "T": "战术家 (Tactician)",
+                "G": "战略家 (Strategist)",
+                "fullName": "策略风格"
+            },
+            "rules": {
+                "P": "纯粹主义者 (Purist)",
+                "F": "自由派 (Freewheeler)",
+                "fullName": "规则态度"
+            },
+            "victory": {
+                "C": "竞争型 (Competitive)",
+                "E": "体验型 (Experiential)",
+                "fullName": "胜利导向"
+            }
+        };
+
+        // 游戏推荐
+        const gameRecommendations = {
+            "S": ["《骆驼大赛》", "《我是大老板》", "《谍报风云》"],
+            "C": ["《奥地利大饭店》", "《历史巨轮》", "《工业革命》"],
+            "T": ["《三国杀》", "《星蚀》", "《冷战热斗》"],
+            "G": ["《历史巨轮》", "《魔戒圣战》", "《火星之上》"],
+            "P": ["《强国争坝》", "《历史巨轮》", "《工业革命》"],
+            "F": ["《骆驼大赛》", "《画物语》", "《只言片语》"],
+            "C_v": ["《冷战热斗》", "《星蚀》", "《历史巨轮》"],
+            "E": ["《画物语》", "《只言片语》", "《骆驼大赛》"]
+        };
+
+        // 当前问题索引
+        let currentQuestionIndex = 0;
+        // 用户答案记录
+        const userAnswers = Array(questions.length).fill(null);
+        // 用户答案详细记录（用于图表）
+        const userAnswerDetails = {
+            energy: { S: 0, C: 0, total: 0 },
+            strategy: { T: 0, G: 0, total: 0 },
+            rules: { P: 0, F: 0, total: 0 },
+            victory: { C: 0, E: 0, total: 0 }
+        };
+
+        // 初始化测试
+        function initTest() {
+            displayQuestion();
+            updateProgress();
+            updateNavigation();
+        }
+
+        // 显示当前问题
+        function displayQuestion() {
+            const testContainer = document.getElementById('test-container');
+            const question = questions[currentQuestionIndex];
+
+            let optionsHTML = '';
+            question.options.forEach((option, index) => {
+                const isChecked = userAnswers[currentQuestionIndex] === index;
+                optionsHTML += `
+                    <div class="option-row">
+                        <input class="option-radio" type="radio" name="question-${currentQuestionIndex}" 
+                               id="option-${currentQuestionIndex}-${index}" value="${index}" 
+                               ${isChecked ? 'checked' : ''}>
+                        <label class="option-label" for="option-${currentQuestionIndex}-${index}">${option}</label>
+                    </div>
+                `;
+            });
+
+            testContainer.innerHTML = `
+                <div class="card">
+                    <div class="question">${currentQuestionIndex + 1}. ${question.question}</div>
+                    <div class="options">${optionsHTML}</div>
+                </div>
+            `;
+
+            // 添加选项点击事件
+            document.querySelectorAll('.option-radio').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    if (this.checked) {
+                        userAnswers[currentQuestionIndex] = parseInt(this.value);
+                        updateNavigation();
+                    }
+                });
+            });
+        }
+
+        // 更新导航按钮状态
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+
+            // 上一题按钮
+            if (currentQuestionIndex > 0) {
+                prevBtn.style.display = 'inline-block';
+            } else {
+                prevBtn.style.display = 'none';
+            }
+
+            // 下一题/提交按钮
+            if (userAnswers[currentQuestionIndex] !== null) {
+                if (currentQuestionIndex < questions.length - 1) {
+                    nextBtn.style.display = 'inline-block';
+                    submitBtn.style.display = 'none';
+                } else {
+                    nextBtn.style.display = 'none';
+                    submitBtn.style.display = 'inline-block';
+                }
+            } else {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        // 上一题
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+                updateProgress();
+                updateNavigation();
+            }
+        }
+
+        // 下一题
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1 && userAnswers[currentQuestionIndex] !== null) {
+                currentQuestionIndex++;
+                displayQuestion();
+                updateProgress();
+                updateNavigation();
+            }
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const progress = document.getElementById('progress');
+            const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progress.style.width = `${progressPercent}%`;
+        }
+
+        // 提交测试
+        function submitTest() {
+            // 计算最终类型
+            calculateResult();
+
+            // 显示结果
+            displayResult();
+        }
+
+        // 计算结果
+        function calculateResult() {
+            // 重置详细记录
+            for (const dimension in userAnswerDetails) {
+                for (const key in userAnswerDetails[dimension]) {
+                    if (key !== 'total') {
+                        userAnswerDetails[dimension][key] = 0;
+                    }
+                }
+                userAnswerDetails[dimension].total = 0;
+            }
+
+            // 统计每个维度的得分
+            questions.forEach((question, index) => {
+                const answerIndex = userAnswers[index];
+                if (answerIndex !== null) {
+                    const score = question.scores[answerIndex];
+                    if (score !== 'N') { // 忽略中立答案
+                        userAnswerDetails[question.dimension][score]++;
+                        userAnswerDetails[question.dimension].total++;
+                    }
+                }
+            });
+
+            // 确定每个维度的倾向
+            const energyType = userAnswerDetails.energy.S >= userAnswerDetails.energy.C ? 'S' : 'C';
+            const strategyType = userAnswerDetails.strategy.T >= userAnswerDetails.strategy.G ? 'T' : 'G';
+            const rulesType = userAnswerDetails.rules.P >= userAnswerDetails.rules.F ? 'P' : 'F';
+            const victoryType = userAnswerDetails.victory.C >= userAnswerDetails.victory.E ? 'C' : 'E';
+
+            return energyType + strategyType + rulesType + victoryType;
+        }
+
+        // 显示结果
+        function displayResult() {
+            const finalType = calculateResult();
+
+            const testContainer = document.getElementById('test-container');
+            const resultContainer = document.getElementById('result-container');
+
+            testContainer.style.display = 'none';
+            document.getElementById('prev-btn').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+            resultContainer.style.display = 'block';
+
+            // 设置结果类型
+            document.getElementById('result-type').textContent = finalType;
+            document.getElementById('result-title').textContent = typeDescriptions[finalType].title;
+            document.getElementById('result-description').textContent = typeDescriptions[finalType].description;
+
+            // 设置维度结果
+            const dimensionsContainer = document.getElementById('dimensions');
+            dimensionsContainer.innerHTML = `
+                <div class="dimension">
+                    <div class="dimension-title">${dimensionDescriptions.energy.fullName}</div>
+                    <div class="dimension-value">${dimensionDescriptions.energy[finalType[0]]}</div>
+                </div>
+                <div class="dimension">
+                    <div class="dimension-title">${dimensionDescriptions.strategy.fullName}</div>
+                    <div class="dimension-value">${dimensionDescriptions.strategy[finalType[1]]}</div>
+                </div>
+                <div class="dimension">
+                    <div class="dimension-title">${dimensionDescriptions.rules.fullName}</div>
+                    <div class="dimension-value">${dimensionDescriptions.rules[finalType[2]]}</div>
+                </div>
+                <div class="dimension">
+                    <div class="dimension-title">${dimensionDescriptions.victory.fullName}</div>
+                    <div class="dimension-value">${dimensionDescriptions.victory[finalType[3]]}</div>
+                </div>
+            `;
+
+            // 绘制维度分布图
+            drawDimensionChart();
+
+            // 设置游戏推荐
+            const gameRecContainer = document.getElementById('game-recommendations');
+            const energyGames = gameRecommendations[finalType[0]];
+            const strategyGames = gameRecommendations[finalType[1]];
+            const rulesGames = gameRecommendations[finalType[2]];
+            const victoryGames = finalType[3] === 'C' ? gameRecommendations['C_v'] : gameRecommendations['E'];
+
+            // 去重并合并推荐游戏
+            const allGames = [...new Set([...energyGames, ...strategyGames, ...rulesGames, ...victoryGames])];
+
+            let gamesHTML = '';
+            allGames.forEach(game => {
+                gamesHTML += `<div class="recommendation">${game}</div>`;
+            });
+
+            gameRecContainer.innerHTML = gamesHTML;
+        }
+
+        // 绘制维度分布图
+        function drawDimensionChart() {
+            const ctx = document.getElementById('dimension-chart').getContext('2d');
+
+            // 计算每个维度的百分比
+            const energySPercent = userAnswerDetails.energy.total > 0 ?
+                (userAnswerDetails.energy.S / userAnswerDetails.energy.total * 100).toFixed(1) : 0;
+            const energyCPercent = userAnswerDetails.energy.total > 0 ?
+                (userAnswerDetails.energy.C / userAnswerDetails.energy.total * 100).toFixed(1) : 0;
+
+            const strategyTPercent = userAnswerDetails.strategy.total > 0 ?
+                (userAnswerDetails.strategy.T / userAnswerDetails.strategy.total * 100).toFixed(1) : 0;
+            const strategyGPercent = userAnswerDetails.strategy.total > 0 ?
+                (userAnswerDetails.strategy.G / userAnswerDetails.strategy.total * 100).toFixed(1) : 0;
+
+            const rulesPPercent = userAnswerDetails.rules.total > 0 ?
+                (userAnswerDetails.rules.P / userAnswerDetails.rules.total * 100).toFixed(1) : 0;
+            const rulesFPercent = userAnswerDetails.rules.total > 0 ?
+                (userAnswerDetails.rules.F / userAnswerDetails.rules.total * 100).toFixed(1) : 0;
+
+            const victoryCPercent = userAnswerDetails.victory.total > 0 ?
+                (userAnswerDetails.victory.C / userAnswerDetails.victory.total * 100).toFixed(1) : 0;
+            const victoryEPercent = userAnswerDetails.victory.total > 0 ?
+                (userAnswerDetails.victory.E / userAnswerDetails.victory.total * 100).toFixed(1) : 0;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        `${dimensionDescriptions.energy.fullName}`,
+                        `${dimensionDescriptions.strategy.fullName}`,
+                        `${dimensionDescriptions.rules.fullName}`,
+                        `${dimensionDescriptions.victory.fullName}`
+                    ],
+                    datasets: [
+                        {
+                            label: dimensionDescriptions.energy.S,
+                            data: [energySPercent, 0, 0, 0],
+                            backgroundColor: '#4cc9f0',
+                            borderColor: '#4cc9f0',
+                            borderWidth: 1
+                        },
+                        {
+                            label: dimensionDescriptions.energy.C,
+                            data: [energyCPercent, 0, 0, 0],
+                            backgroundColor: '#4361ee',
+                            borderColor: '#4361ee',
+                            borderWidth: 1
+                        },
+                        {
+                            label: dimensionDescriptions.strategy.T,
+                            data: [0, strategyTPercent, 0, 0],
+                            backgroundColor: '#f8961e',
+                            borderColor: '#f8961e',
+                            borderWidth: 1
+                        },
+                        {
+                            label: dimensionDescriptions.strategy.G,
+                            data: [0, strategyGPercent, 0, 0],
+                            backgroundColor: '#7209b7',
+                            borderColor: '#7209b7',
+                            borderWidth: 1
+                        },
+                        {
+                            label: dimensionDescriptions.rules.P,
+                            data: [0, 0, rulesPPercent, 0],
+                            backgroundColor: '#f72585',
+                            borderColor: '#f72585',
+                            borderWidth: 1
+                        },
+                        {
+                            label: dimensionDescriptions.rules.F,
+                            data: [0, 0, rulesFPercent, 0],
+                            backgroundColor: '#3a0ca3',
+                            borderColor: '#3a0ca3',
+                            borderWidth: 1
+                        },
+                        {
+                            label: dimensionDescriptions.victory.C,
+                            data: [0, 0, 0, victoryCPercent],
+                            backgroundColor: '#06d6a0',
+                            borderColor: '#06d6a0',
+                            borderWidth: 1
+                        },
+                        {
+                            label: dimensionDescriptions.victory.E,
+                            data: [0, 0, 0, victoryEPercent],
+                            backgroundColor: '#ffd166',
+                            borderColor: '#ffd166',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            stacked: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: '百分比 (%)'
+                            }
+                        },
+                        y: {
+                            stacked: true
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '人格维度分布图',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return `${context.dataset.label}: ${context.raw}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 重新开始测试
+        function restartTest() {
+            currentQuestionIndex = 0;
+            // 重置答案
+            for (let i = 0; i < userAnswers.length; i++) {
+                userAnswers[i] = null;
+            }
+
+            const testContainer = document.getElementById('test-container');
+            const resultContainer = document.getElementById('result-container');
+
+            testContainer.style.display = 'block';
+            resultContainer.style.display = 'none';
+
+            initTest();
+        }
+
+        // 初始化事件监听
+        document.getElementById('prev-btn').addEventListener('click', prevQuestion);
+        document.getElementById('next-btn').addEventListener('click', nextQuestion);
+        document.getElementById('submit-btn').addEventListener('click', submitTest);
+        document.getElementById('restart-btn').addEventListener('click', restartTest);
+
+        // 启动测试
+        initTest();
+    </script>
+</body>
+
+</html>
